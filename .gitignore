@@ -1,0 +1,24 @@
+# Dependency directories
+node_modules/
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Environment and secret files
+.env
+.env.local
+*.pem
+deploy_key*
+
+# Build and coverage outputs
+dist/
+build/
+.coverage
+htmlcov/
+
+# System & Editor files
+.DS_Store
+.vscode/
+.idea/
+
