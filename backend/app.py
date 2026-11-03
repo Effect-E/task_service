@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 # A very small "database": a list that lives in memory.
 # (It resets when the app restarts. A real database comes later.)
-tasks = []
+tasks = [{"id": 1, "title": "Learn GitHub Actions", "done": False}]
 
 
 @app.get("/api/health")
