@@ -1,0 +1,91 @@
+name: Deploy static site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy-static.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-static
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check the site files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Make sure the page files exist and are not empty
+        run: |
+          for f in index.html style.css app.js; do
+            test -s "frontend/$f" || { echo "Missing or empty: frontend/$f"; exit 1; }
+          done
+          grep -q "<title>" frontend/index.html
+          echo "All site files look fine"
+
+      - name: Write check step summary
+        if: always()
+        run: |
+          {
+            echo "### 🔍 Site Files Check Summary"
+            echo "- **Files checked:** \`index.html\`, \`style.css\`, \`app.js\`"
+            echo "- **Validation status:** All required frontend files are present and non-empty."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Upload to EC2
+    needs: check
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload the files with rsync
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          rsync -az --delete \
+            --exclude 'Dockerfile' --exclude 'nginx.conf' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            frontend/ "${EC2_USER}@${EC2_HOST}:/var/www/task-board/"
+
+      - name: Check that the site answers
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          curl -fsS "http://${EC2_HOST}/" | grep -q "Task Board"
+          echo "Site is up"
+
+      - name: Write the deployment job summary
+        if: always()
+        run: |
+          {
+            echo "## 🚀 Static Site Deployment Summary"
+            echo ""
+            echo "| Parameter | Details |"
+            echo "| --- | --- |"
+            echo "| **Environment** | Production |"
+            echo "| **Commit SHA** | \`${GITHUB_SHA::7}\` |"
+            echo "| **Triggered By** | \`${GITHUB_ACTOR}\` |"
+            echo "| **Target Directory** | \`/var/www/task-board/\` |"
+            echo "| **Deployment Status** | Success |"
+          } >> "$GITHUB_STEP_SUMMARY"

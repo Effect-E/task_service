@@ -1,0 +1,56 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-tests:
+    name: Run Backend Unit Tests
+    runs-on: ubuntu-latest
+    environment: staging
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install packages
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest -v --junitxml=test-results.xml
+
+      - name: Write test step summary
+        if: always()
+        run: |
+          {
+            echo "## 🧪 Backend Test Execution Summary"
+            echo ""
+            echo "| Metric | Value |"
+            echo "| --- | --- |"
+            echo "| **Environment** | Staging |"
+            echo "| **Working Directory** | \`backend/\` |"
+            echo "| **Python Version** | \`3.12\` |"
+            echo "| **Report Saved** | \`backend/test-results.xml\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save the test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: backend/test-results.xml
+          retention-days: 7

@@ -1,0 +1,50 @@
+name: Hello Actions
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Say hello
+        run: echo "Hello from GitHub Actions"
+
+      - name: Look at the folder BEFORE checkout
+        run: ls -la
+
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Look at the folder AFTER checkout
+        run: ls -la
+
+      - name: Show facts about this run
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Started by: ${{ github.actor }}"
+
+      - name: Show the machine we run on
+        run: |
+          uname -a
+          python3 --version
+          docker --version
+
+      - name: Write step summary
+        if: always()
+        run: |
+          {
+            echo "## 👋 Hello Actions Summary"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| **Environment** | Staging |"
+            echo "| **Repository** | \`${{ github.repository }}\` |"
+            echo "| **Branch** | \`${{ github.ref_name }}\` |"
+            echo "| **Commit** | \`${{ github.sha }}\` |"
+            echo "| **Triggered By** | \`${{ github.actor }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
