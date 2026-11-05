@@ -2,7 +2,7 @@ name: Hello Actions
 
 on:
   push:
-    branches: [main]
+    branches: [app-and-tests]
 
 jobs:
   hello:

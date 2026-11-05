@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [main]
+    branches: [app-and-tests]
   pull_request:
 
 permissions:
