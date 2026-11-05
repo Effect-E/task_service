@@ -1,6 +1,6 @@
 // The page talks to the backend through the same address, under /api.
 async function loadTasks() {
-  const res = await fetch("/api/tasks");
+  const res = await fetch(window.API_BASE + "/api/tasks");
   const tasks = await res.json();
   const list = document.getElementById("tasks");
   list.innerHTML = "";
@@ -14,7 +14,7 @@ async function loadTasks() {
 async function checkBackend() {
   const status = document.getElementById("status");
   try {
-    const res = await fetch("/api/health");
+    const res = await fetch(window.API_BASE + "/api/health");
     status.textContent = res.ok ? "Backend is running" : "Backend problem";
   } catch (e) {
     status.textContent = "Cannot reach the backend";
@@ -24,7 +24,7 @@ async function checkBackend() {
 document.getElementById("task-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const input = document.getElementById("title");
-  await fetch("/api/tasks", {
+  await fetch(window.API_BASE + "/api/tasks", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title: input.value }),

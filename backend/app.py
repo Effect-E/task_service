@@ -1,6 +1,11 @@
 from flask import Flask, jsonify, request
 
+import os
+from flask_cors import CORS
+
 app = Flask(__name__)
+
+CORS(app, origin=os.environ.get("FRONTEND_ORIGIN",  "*"))
 
 # A very small "database": a list that lives in memory.
 # (It resets when the app restarts. A real database comes later.)
